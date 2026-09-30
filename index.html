@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WAVE LAB — Retro Signal Challenge</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:"Trebuchet MS",Arial,sans-serif;background:#20a45a;color:#111}
+body{overflow-x:hidden}
+button{font:inherit;cursor:pointer}
+.desktop{
+  min-height:100vh;padding:12px;
+  background:
+   radial-gradient(circle at 12% 18%,rgba(255,255,255,.5) 0 2px,transparent 3px),
+   radial-gradient(circle at 88% 25%,rgba(255,255,255,.45) 0 2px,transparent 3px),
+   linear-gradient(135deg,#58d9e7 0 32%,#43c8df 32% 58%,#21a458 58%);
+  background-size:auto,auto,100% 100%;
+}
+.topbar{height:52px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.winbtn,.iconbtn{
+  border:2px solid #111;border-top-color:#fff;border-left-color:#fff;
+  background:#d9e6ea;padding:5px 12px;min-height:30px;
+  box-shadow:2px 2px #111;white-space:nowrap
+}
+.winbtn:active,.iconbtn:active{border-top-color:#111;border-left-color:#111;border-right-color:#fff;border-bottom-color:#fff;box-shadow:none;transform:translate(2px,2px)}
+.arrow{font-size:21px;font-weight:900;color:#064b90}
+.loading{font-family:monospace;color:white;text-shadow:1px 1px #167;}
+.desktop-title{font-size:18px;color:white;text-shadow:2px 2px #167;font-weight:bold}
+.main{max-width:1180px;margin:0 auto;position:relative;min-height:calc(100vh - 80px)}
+.window{
+ position:absolute;background:#d7d7d7;border:3px solid #111;
+ box-shadow:6px 6px rgba(0,0,0,.45), inset 2px 2px #fff;
+}
+.titlebar{
+ height:30px;background:linear-gradient(#1779c9,#075aa5);color:white;
+ display:flex;align-items:center;justify-content:space-between;padding:2px 5px;
+ font-weight:bold;border-bottom:2px solid #111
+}
+.titlebar .controls{display:flex;gap:3px}
+.titlebar .controls span{background:#d7d7d7;color:#111;border:1px solid #111;width:20px;height:20px;text-align:center;line-height:18px;font-size:12px}
+.window-body{padding:14px}
+.hero{left:2%;top:22px;width:53%;min-height:280px;z-index:2}
+.side{right:2%;top:55px;width:40%;min-height:330px;z-index:3}
+.status{left:10%;bottom:22px;width:42%;z-index:4}
+.play{right:9%;bottom:30px;width:38%;z-index:5}
+.wavebox{background:#f4f4f4;border:2px inset #999;padding:8px;margin:10px 0}
+.wave{height:80px;position:relative;overflow:hidden;background:#001f2c;border:2px inset #aaa}
+.wave svg{width:100%;height:100%}
+.logo{display:flex;align-items:center;gap:15px}
+.monitor{font-size:75px;filter:drop-shadow(3px 3px #555)}
+h1{font-size:30px;margin:0;color:#053f83;text-shadow:1px 1px #fff}
+.subtitle{font-family:monospace;color:#333}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.card{
+ background:#eee;border:2px outset #fff;padding:9px;min-height:80px;
+ box-shadow:2px 2px #555
+}
+.card:hover{background:#fff59b}
+.card h3{margin:0 0 5px;color:#075aa5;font-size:16px}
+.card p{margin:0;font-size:12px}
+.retro-btn{
+ border:2px outset #fff;background:#d8d8d8;padding:7px 13px;font-weight:bold;
+ color:#111
+}
+.retro-btn:hover{background:#fff}
+.retro-btn.primary{background:#55d35f}
+.retro-btn.blue{background:#57b7ff}
+.retro-btn.red{background:#ff7777}
+.playrow{display:flex;gap:8px;flex-wrap:wrap}
+.badge{display:inline-block;border:2px inset #aaa;background:#cfcfcf;padding:3px 8px;font-family:monospace}
+.score{font-weight:bold;color:#064b90}
+.hidden{display:none!important}
+.game-screen{position:fixed;inset:0;background:#178f54;z-index:20;padding:10px;overflow:auto}
+.game-window{max-width:1050px;margin:0 auto;background:#d7d7d7;border:3px solid #111;box-shadow:7px 7px #123}
+.game-body{padding:16px}
+.game-header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.question{font-size:22px;font-weight:bold;margin:14px 0;color:#064b90}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{background:#eee;border:2px outset #fff;padding:12px;text-align:left}
+.choice:hover{background:#fff59b}
+.feedback{margin-top:12px;padding:10px;border:2px inset #999;background:#f7f7f7}
+.feedback.good{background:#bdf4b8}.feedback.bad{background:#ffb7b7}
+.progress{height:18px;border:2px inset #999;background:#eee;margin:8px 0}
+.progress>div{height:100%;background:#1779c9;width:0}
+.match-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.match-item{background:#eee;border:2px outset #fff;padding:10px;min-height:70px}
+.match-item.selected{background:#fff59b}
+.cat{width:100%;margin-top:6px}
+.scenario{background:#102d3b;color:#dffaff;border:3px inset #777;padding:14px;font-family:monospace}
+.action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.action{background:#ddd;border:2px outset #fff;padding:10px}
+.action:hover{background:#fff59b}
+.kpi{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.kpi span{border:2px inset #aaa;background:#eee;padding:6px 10px}
+.sim-panel{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.big-number{font-size:38px;font-family:monospace;color:#075aa5}
+.password{font-size:32px;letter-spacing:7px;background:#001f2c;color:#48ff86;padding:12px;text-align:center;font-family:monospace;border:3px inset #777}
+.footer{position:fixed;left:0;right:0;bottom:0;height:20px;background:#d7d7d7;border-top:2px solid #fff;display:flex;align-items:center;padding:0 8px;font-size:11px;z-index:10}
+@media(max-width:800px){
+ .window{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:100%!important;margin:10px 0}
+ .main{display:block}.hero,.side,.status,.play{min-height:auto}
+ .choices,.action-grid,.sim-panel{grid-template-columns:1fr}
+ .match-grid{grid-template-columns:repeat(2,1fr)}
+ .topbar{height:auto}
+ h1{font-size:23px}.monitor{font-size:55px}
+}
+</style>
+
+<style id="wave-lab-stability-patch">
+.choice:disabled,.action:disabled,.retro-btn:disabled{opacity:.58;cursor:not-allowed}
+.choice:focus-visible,.action:focus-visible,.retro-btn:focus-visible{outline:3px solid #064b90;outline-offset:2px}
+.feedback{line-height:1.5}
+.kpi span{min-width:max-content}
+</style>
+
+</head>
+<body>
+<div class="desktop" id="home">
+ <div class="topbar">
+   <button class="winbtn" onclick="location.reload()">‹ Back</button>
+   <button class="winbtn" onclick="scrollTo(0,0)">Next ›</button>
+   <span class="arrow">▶▶</span><span class="arrow">≫</span>
+   <span class="loading">loading ...</span>
+   <span class="desktop-title">WAVE LAB.EXE</span>
+ </div>
+
+ <div class="main">
+  <section class="window hero">
+   <div class="titlebar"><span>📡 WAVE LAB — Signal Challenge</span><div class="controls"><span>—</span><span>□</span><span>×</span></div></div>
+   <div class="window-body">
+    <div class="logo">
+      <div class="monitor">🖥️</div>
+      <div><h1>WAVE LAB</h1><div class="subtitle">SIGNAL TRAINING SYSTEM v1.0</div></div>
+    </div>
+    <div class="wavebox">
+      <div class="subtitle">SIGNAL MONITOR</div>
+      <div class="wave">
+       <svg viewBox="0 0 700 80" preserveAspectRatio="none">
+        <path d="M0 40 Q22 5 44 40 T88 40 T132 40 T176 40 T220 40 T264 40 T308 40 T352 40 T396 40 T440 40 T484 40 T528 40 T572 40 T616 40 T660 40 T704 40" fill="none" stroke="#48ff86" stroke-width="4"/>
+       </svg>
+      </div>
+    </div>
+    <div class="playrow">
+      <button class="retro-btn primary" onclick="openGame(1)">▶ LET'S PLAY</button>
+      <span class="badge">USER: PLAYER_01</span><span class="badge">SCORE: <b id="homeScore">0</b></span>
+    </div>
+   </div>
+  </section>
+
+  <section class="window side">
+   <div class="titlebar"><span>📁 GAME MENU</span><div class="controls"><span>×</span></div></div>
+   <div class="window-body">
+    <div class="grid">
+     <div class="card" onclick="openGame(1)"><h3>1. Quiz Challenge</h3><p>ตอบคำถามเรื่องรูปคลื่นและ f = 1/T</p></div>
+     <div class="card" onclick="openGame(2)"><h3>2. Match Lab</h3><p>จับคู่ Wave / Parameter / Unit</p></div>
+     <div class="card" onclick="openGame(3)"><h3>3. Fix The Clock</h3><p>เลือกเส้นทางแก้ Clock Signal</p></div>
+     <div class="card" onclick="openGame(4)"><h3>4. Escape Lab</h3><p>ผ่าน 3 ด่านเพื่อหารหัส</p></div>
+     <div class="card" onclick="openGame(5)"><h3>5. Simulation</h3><p>ปรับ 50 Hz → 100 Hz ภายใน 5 Turns</p></div>
+    </div>
+    <hr>
+    <b>OBJECTIVE</b>
+    <p style="font-size:13px">รู้จัก Sine Wave, Square Wave, Asymmetric Pulse, Period, Frequency และ Duty Cycle พร้อมคำนวณด้วยสูตร <b>f = 1/T</b></p>
+   </div>
+  </section>
+
+  <section class="window status">
+   <div class="titlebar"><span>💬 SYSTEM STATUS</span><div class="controls"><span>×</span></div></div>
+   <div class="window-body">
+    <span class="badge">● ONLINE</span>
+    <span class="badge">SIGNAL OK</span>
+    <p style="font-family:monospace;margin-bottom:0">Ready. Select a mission...</p>
+   </div>
+  </section>
+
+  <section class="window play">
+   <div class="titlebar"><span>⚠ START PANEL</span><div class="controls"><span>×</span></div></div>
+   <div class="window-body">
+    <div style="font-size:40px">🙂 👀 🙂</div>
+    <p>เรียนรู้ผ่านเกม แล้วพิชิต Signal Challenge!</p>
+    <button class="retro-btn blue" onclick="openGame(1)">OPEN GAME</button>
+   </div>
+  </section>
+ </div>
+</div>
+
+<div id="gameScreen" class="game-screen hidden">
+ <div class="game-window">
+  <div class="titlebar"><span id="gameTitle">GAME</span><div class="controls"><span onclick="closeGame()">×</span></div></div>
+  <div class="game-body" id="gameBody"></div>
+ </div>
+</div>
+<div class="footer">WAVE LAB.EXE &nbsp; | &nbsp; Retro Signal Training System &nbsp; | &nbsp; © Educational Game</div>
+
+<script>
+/* WAVE LAB — Unified Game Controller
+   All 5 games share one score/progress state.
+   Timers are tracked and cancelled to prevent stale callbacks.
+*/
+(() => {
+  "use strict";
+
+  const state = {
+    score: 0,
+    game: 0,
+    qi: 0,
+    mi: 0,
+    node: 1,
+    eLevel: 1,
+    password: "",
+    turn: 5,
+    T: 20,
+    completed: new Set(),
+    timer: null
+  };
+
+  const q = [
+    ["รูปคลื่นใดมีลักษณะขึ้นลงอย่างต่อเนื่องและเรียบ?", ["Sine Wave","Square Wave","Asymmetric Pulse","DC Only"], 0, "Sine Wave มีรูปทรงโค้งต่อเนื่อง"],
+    ["รูปคลื่นใดสลับ HIGH และ LOW เป็นช่วง ๆ อย่างชัดเจน?", ["Sine Wave","Square Wave","Triangle","Noise"], 1, "Square Wave มีระดับ HIGH/LOW ชัดเจน"],
+    ["ตัวอักษร T ในสมการ f = 1/T หมายถึงอะไร?", ["ความถี่","คาบเวลา","แรงดัน","Duty Cycle"], 1, "T คือ Period หรือคาบเวลา"],
+    ["ถ้า T = 0.1 s ความถี่ f เท่ากับเท่าไร?", ["1 Hz","5 Hz","10 Hz","100 Hz"], 2, "f = 1/0.1 = 10 Hz"],
+    ["ถ้า T = 20 ms ต้องแปลงเป็นวินาทีเท่าไร?", ["0.2 s","0.02 s","2 s","0.002 s"], 1, "20 ms = 20/1000 = 0.02 s"],
+    ["ถ้า T = 0.02 s ความถี่เท่ากับเท่าไร?", ["20 Hz","40 Hz","50 Hz","100 Hz"], 2, "f = 1/0.02 = 50 Hz"],
+    ["ถ้า T เพิ่มจาก 0.01 s เป็น 0.02 s ความถี่จะเป็นอย่างไร?", ["เพิ่มขึ้น","ลดลง","เท่าเดิม","เป็นศูนย์"], 1, "เมื่อ T เพิ่ม ค่า f = 1/T จะลดลง"],
+    ["Duty Cycle 50% ของ Square Wave หมายถึงอะไร?", ["HIGH และ LOW ใช้เวลาเท่ากัน","HIGH มากกว่า LOW","LOW มากกว่า HIGH","ไม่มี LOW"], 0, "50% หมายถึงช่วง HIGH และ LOW เท่ากัน"]
+  ];
+
+  const matchItems = [
+    ["Sine Wave","WAVE"],["Square Wave","WAVE"],["Asymmetric Pulse","WAVE"],["Period (T)","PARAMETER"],
+    ["Frequency (f)","PARAMETER"],["Duty Cycle 50%","PARAMETER"],["20 ms","TIME"],["0.02 s","TIME"],
+    ["50 Hz","FREQUENCY"],["HIGH","SIGNAL LEVEL"],["LOW","SIGNAL LEVEL"],["f = 1/T","FORMULA"]
+  ];
+  const cats = ["WAVE","PARAMETER","TIME","FREQUENCY","SIGNAL LEVEL","FORMULA"];
+
+  const $ = id => document.getElementById(id);
+
+  function clearPending() {
+    if (state.timer !== null) {
+      clearTimeout(state.timer);
+      state.timer = null;
+    }
+  }
+
+  function schedule(fn, ms) {
+    clearPending();
+    state.timer = setTimeout(() => {
+      state.timer = null;
+      fn();
+    }, ms);
+  }
+
+  function updateScore() {
+    const home = $("homeScore");
+    if (home) home.textContent = String(state.score);
+  }
+
+  function addScore(points) {
+    const n = Number(points);
+    if (!Number.isFinite(n) || n <= 0) return;
+    state.score += Math.round(n);
+    updateScore();
+  }
+
+  function setFeedback(id, type, html) {
+    const el = $(id);
+    if (!el) return;
+    el.className = "feedback " + type;
+    el.innerHTML = html;
+  }
+
+  function header(title, sub = "") {
+    return `<div class="game-header">
+      <div><h2 style="margin:0;color:#075aa5">${title}</h2><small>${sub}</small></div>
+      <button type="button" class="retro-btn red" id="closeGameBtn">✕ CLOSE</button>
+    </div>`;
+  }
+
+  function bindClose() {
+    const btn = $("closeGameBtn");
+    if (btn) btn.addEventListener("click", closeGame);
+  }
+
+  function openGame(n) {
+    const gameNo = Number(n);
+    if (!Number.isInteger(gameNo) || gameNo < 1 || gameNo > 5) return;
+
+    clearPending();
+    state.game = gameNo;
+    $("gameScreen").classList.remove("hidden");
+    renderGame();
+  }
+
+  function closeGame() {
+    clearPending();
+    $("gameScreen").classList.add("hidden");
+    $("gameBody").innerHTML = "";
+    state.game = 0;
+  }
+
+  function resetGameState(n) {
+    if (n === 1) state.qi = 0;
+    if (n === 2) state.mi = 0;
+    if (n === 3) state.node = 1;
+    if (n === 4) { state.eLevel = 1; state.password = ""; }
+    if (n === 5) { state.turn = 5; state.T = 20; }
+  }
+
+  function markCompleted(n) {
+    state.completed.add(n);
+    updateMissionStatus();
+  }
+
+  function updateMissionStatus() {
+    const el = $("missionStatus");
+    if (!el) return;
+    const done = state.completed.size;
+    el.textContent = `${done}/5 GAMES COMPLETE`;
+  }
+
+  function game1() {
+    $("gameTitle").textContent = "📄 QUIZ.EXE";
+    const x = q[state.qi];
+    const pct = ((state.qi) / q.length) * 100;
+    $("gameBody").innerHTML =
+      header("GAME 1 — QUIZ CHALLENGE", `Question ${state.qi + 1} / ${q.length}`) +
+      `<div class="progress"><div style="width:${pct}%"></div></div>
+       <div class="question">${x[0]}</div>
+       <div class="choices">
+         ${x[1].map((c,i) => `<button type="button" class="choice" data-q="${i}">${String.fromCharCode(65+i)}. ${c}</button>`).join("")}
+       </div>
+       <div id="qfb" aria-live="polite"></div>`;
+    bindClose();
+    document.querySelectorAll("[data-q]").forEach(btn => {
+      btn.addEventListener("click", () => answerQ(Number(btn.dataset.q)));
+    });
+  }
+
+  function answerQ(i) {
+    const buttons = document.querySelectorAll("[data-q]");
+    buttons.forEach(b => b.disabled = true);
+    const x = q[state.qi];
+
+    if (i === x[2]) {
+      addScore(10);
+      setFeedback("qfb", "good", `✅ ถูกต้อง! ${x[3]}<br><br>
+        <span class="score">+10 คะแนน</span>
+        <br><br><button type="button" class="retro-btn blue" id="qNext">${state.qi < q.length - 1 ? "NEXT ▶" : "FINISH ✓"}</button>`);
+    } else {
+      setFeedback("qfb", "bad", `❌ ยังไม่ถูก — Hint: ลองนึกถึงความสัมพันธ์ของคาบกับความถี่<br><br>
+        <span class="score">+0 คะแนน</span>
+        <br><br><button type="button" class="retro-btn blue" id="qNext">${state.qi < q.length - 1 ? "NEXT ▶" : "FINISH ✓"}</button>`);
+    }
+
+    $("qNext").addEventListener("click", () => {
+      if (state.qi < q.length - 1) {
+        state.qi++;
+        game1();
+      } else {
+        markCompleted(1);
+        showGameComplete(1, "QUIZ CHALLENGE", `ทำครบ ${q.length} ข้อแล้ว`);
+      }
+    });
+  }
+
+  function game2() {
+    $("gameTitle").textContent = "🧩 MATCH.EXE";
+    if (state.mi >= matchItems.length) {
+      markCompleted(2);
+      showGameComplete(2, "MATCH LAB", "จับคู่ครบ 12 รายการแล้ว");
+      return;
+    }
+
+    const it = matchItems[state.mi];
+    $("gameBody").innerHTML =
+      header("GAME 2 — MATCH & CLASSIFICATION", `Item ${state.mi + 1} / ${matchItems.length}`) +
+      `<div class="progress"><div style="width:${(state.mi/matchItems.length)*100}%"></div></div>
+       <div class="question">${it[0]}</div>
+       <p>เลือกหมวดหมู่ที่คิดว่าเหมาะสม:</p>
+       <div class="action-grid">${cats.map(c => `<button type="button" class="action" data-cat="${c}">${c}</button>`).join("")}</div>
+       <div id="mfb" aria-live="polite"></div>`;
+    bindClose();
+    document.querySelectorAll("[data-cat]").forEach(btn => {
+      btn.addEventListener("click", () => matchAnswer(btn.dataset.cat));
+    });
+  }
+
+  function matchAnswer(c) {
+    const buttons = document.querySelectorAll("[data-cat]");
+    buttons.forEach(b => b.disabled = true);
+    const ok = c === matchItems[state.mi][1];
+
+    if (ok) {
+      addScore(5);
+      setFeedback("mfb", "good", `✅ ถูกต้อง! <span class="score">+5 คะแนน</span>`);
+      state.mi++;
+      schedule(() => game2(), 450);
+    } else {
+      setFeedback("mfb", "bad", `❌ ยังไม่ใช่<br>Hint: ลองดูว่าเป็นรูปคลื่น พารามิเตอร์ เวลา หน่วยความถี่ ระดับสัญญาณ หรือสูตร<br><br>
+        <span class="score">+0 คะแนน</span><br><br>
+        <button type="button" class="retro-btn blue" id="mRetry">TRY AGAIN</button>`);
+      $("mRetry").addEventListener("click", game2);
+    }
+  }
+
+  function game3() {
+    $("gameTitle").textContent = "🛠 CLOCKFIX.EXE";
+    const data = {
+      1: ["ตรวจพบ Clock Signal ผิดปกติ","คุณจะเริ่มจากอะไร?",["ตรวจสอบค่า Period (T)","รีบูตเครื่องทันที","เพิ่ม Period ให้มากขึ้น"]],
+      2: ["พบ T = 0.02 s","ต้องหาความถี่เพื่อยืนยันปัญหา",["คำนวณ f = 1/T","ใช้ f = T/1","ข้ามการคำนวณแล้วรีบูต"]],
+      3: ["ระบบต้องการ 100 Hz แต่พบ 50 Hz","ต้องปรับ Period อย่างไร?",["ลด T ลงเป็น 0.01 s","เพิ่ม T เป็น 0.04 s","ปล่อยค่าเดิม"]]
+    };
+    const d = data[state.node];
+
+    $("gameBody").innerHTML =
+      header("GAME 3 — BRANCHING SCENARIO", `Node ${state.node} / 3`) +
+      `<div class="progress"><div style="width:${((state.node-1)/3)*100}%"></div></div>
+       <div class="scenario"><b>${d[0]}</b><br><br>${d[1]}</div>
+       <div class="action-grid">${d[2].map((o,i) => `<button type="button" class="action" data-branch="${i}">${i+1}. ${o}</button>`).join("")}</div>
+       <div id="bfb" aria-live="polite"></div>`;
+    bindClose();
+    document.querySelectorAll("[data-branch]").forEach(btn => {
+      btn.addEventListener("click", () => branch(Number(btn.dataset.branch)));
+    });
+  }
+
+  function branch(i) {
+    const buttons = document.querySelectorAll("[data-branch]");
+    buttons.forEach(b => b.disabled = true);
+
+    if (state.node === 1 && i === 0) {
+      addScore(10);
+      state.node = 2;
+      setFeedback("bfb", "good", `✅ ดี! ได้ Evidence: T = 0.02 s<br><span class="score">+10 คะแนน</span>`);
+      schedule(game3, 600);
+    } else if (state.node === 2 && i === 0) {
+      addScore(15);
+      state.node = 3;
+      setFeedback("bfb", "good", `✅ ถูกต้อง! f = 1 / 0.02 = 50 Hz<br><span class="score">+15 คะแนน</span>`);
+      schedule(game3, 600);
+    } else if (state.node === 3 && i === 0) {
+      addScore(20);
+      markCompleted(3);
+      setFeedback("bfb", "good", `🏆 SUCCESS! T = 10 ms ทำให้ f = 100 Hz<br><span class="score">+20 คะแนน</span>`);
+      schedule(() => showGameComplete(3, "FIX THE CLOCK", "แก้ Clock Signal สำเร็จ"), 650);
+    } else {
+      setFeedback("bfb", "bad", `⚠ RETRY PATH — การตัดสินใจนี้ทำให้เสียเวลา ลองวิเคราะห์ T และ f ใหม่<br><br>
+        <span class="score">+0 คะแนน</span><br><br><button type="button" class="retro-btn blue" id="bRetry">TRY AGAIN</button>`);
+      $("bRetry").addEventListener("click", game3);
+    }
+  }
+
+  function game4() {
+    $("gameTitle").textContent = "🔐 ESCAPE.EXE";
+    const levels = {
+      1: ["รูปคลื่นใดเหมาะกับ Clock Signal แบบ Duty Cycle 50%?", ["Sine Wave","Square Wave","Asymmetric Pulse","Noise"]],
+      2: ["20 ms = ? seconds", ["0.2 s","0.02 s","2 s","0.002 s"]],
+      3: ["ถ้า T = 0.02 s จงหา f", ["20 Hz","40 Hz","50 Hz","100 Hz"]]
+    };
+
+    if (state.eLevel > 3) {
+      markCompleted(4);
+      $("gameBody").innerHTML =
+        header("MISSION COMPLETE", "ESCAPE LAB") +
+        `<h2>🔓 ACCESS GRANTED</h2>
+         <p>รหัสผ่านจากทั้ง 3 ด่านคือ</p>
+         <div class="password">${state.password}</div>
+         <p>KEY 1 = 3 &nbsp; KEY 2 = 2 &nbsp; KEY 3 = 50</p>
+         <div class="feedback good">🏆 Escape Lab สำเร็จ! <span class="score">รวม +45 คะแนน</span></div>
+         <button type="button" class="retro-btn primary" id="escapeBack">BACK TO DESKTOP</button>`;
+      bindClose();
+      $("escapeBack").addEventListener("click", closeGame);
+      return;
+    }
+
+    const [question, choices] = levels[state.eLevel];
+    $("gameBody").innerHTML =
+      header("GAME 4 — ESCAPE LAB", `Level ${state.eLevel} / 3`) +
+      `<div class="progress"><div style="width:${((state.eLevel-1)/3)*100}%"></div></div>
+       <div class="question">${question}</div>
+       <div class="choices">${choices.map((x,i) => `<button type="button" class="choice" data-escape="${i}">${x}</button>`).join("")}</div>
+       <div id="efb" aria-live="polite"></div>`;
+    bindClose();
+    document.querySelectorAll("[data-escape]").forEach(btn => {
+      btn.addEventListener("click", () => escapeA(Number(btn.dataset.escape)));
+    });
+  }
+
+  function escapeA(i) {
+    const correct = [1,1,2][state.eLevel - 1];
+    const keys = ["3","2","50"];
+    const buttons = document.querySelectorAll("[data-escape]");
+    buttons.forEach(b => b.disabled = true);
+
+    if (i === correct) {
+      const key = keys[state.eLevel - 1];
+      addScore(15);
+      state.password += key;
+      setFeedback("efb", "good", `✅ ถูกต้อง! ได้ KEY ${key}<br><span class="score">+15 คะแนน</span>`);
+      state.eLevel++;
+      schedule(game4, 650);
+    } else {
+      setFeedback("efb", "bad", `❌ Wrong Answer — ตรวจชนิดของคลื่น → แปลง ms เป็น s → ใช้ f = 1/T<br><br>
+        <span class="score">+0 คะแนน</span><br><br><button type="button" class="retro-btn blue" id="eRetry">TRY AGAIN</button>`);
+      $("eRetry").addEventListener("click", game4);
+    }
+  }
+
+  function game5() {
+    $("gameTitle").textContent = "🎮 SIMULATOR.EXE";
+    const f = 1000 / state.T;
+    const stable = f === 100;
+
+    $("gameBody").innerHTML =
+      header("GAME 5 — SIGNAL SIMULATION", "Fix the server clock signal") +
+      `<div class="kpi">
+         <span>TURN: <b>${state.turn}</b>/5</span>
+         <span>TARGET: <b>100 Hz</b></span>
+         <span>Current: <b>${f} Hz</b></span>
+       </div>
+       <div class="progress"><div style="width:${((5-state.turn)/5)*100}%"></div></div>
+       <div class="sim-panel">
+         <div class="wavebox"><div class="subtitle">CURRENT PERIOD</div><div class="big-number">${state.T} ms</div><p>สูตร: f = 1000 / T(ms)</p></div>
+         <div class="scenario">SERVER STATUS<br><br>⚠ Clock Signal = ${f} Hz<br>ต้องการ = 100 Hz<br><br>${stable ? "🟢 SYSTEM STABLE" : "🔴 SERVER STUTTER"}</div>
+       </div>
+       <div class="action-grid">
+         <button type="button" class="action" data-t="10">🔧 ปรับ T → 10 ms</button>
+         <button type="button" class="action" data-t="15">🔧 ปรับ T → 15 ms</button>
+         <button type="button" class="action" data-t="30">⚠ เพิ่ม T → 30 ms</button>
+         <button type="button" class="action" data-t="20">🔍 ตรวจสอบค่า T</button>
+         <button type="button" class="action" data-t="20">🔄 Reboot Server</button>
+       </div>
+       <div id="sfb" aria-live="polite"></div>`;
+    bindClose();
+    document.querySelectorAll("[data-t]").forEach(btn => {
+      btn.addEventListener("click", () => simAction(Number(btn.dataset.t)));
+    });
+  }
+
+  function simAction(newT) {
+    if (![10,15,20,30].includes(newT)) return;
+
+    const buttons = document.querySelectorAll("[data-t]");
+    buttons.forEach(b => b.disabled = true);
+
+    state.turn = Math.max(0, state.turn - 1);
+    state.T = newT;
+    const f = 1000 / state.T;
+
+    if (f === 100) {
+      addScore(30);
+      markCompleted(5);
+      setFeedback("sfb", "good", `🏆 SUCCESS! Clock = 100 Hz — Server stable<br><span class="score">+30 คะแนน</span>`);
+      schedule(() => showGameComplete(5, "SIGNAL SIMULATION", "ปรับ Clock Signal เป็น 100 Hz สำเร็จ"), 850);
+      return;
+    }
+
+    if (state.turn <= 0) {
+      setFeedback("sfb", "bad", `💥 GAME OVER — ใช้ครบ 5 Turns แล้ว<br>คำใบ้: เพิ่มความถี่ต้องลด Period<br><br>
+        <span class="score">+0 คะแนน</span><br><br><button type="button" class="retro-btn blue" id="simRetry">RESTART SIMULATION</button>`);
+      $("simRetry").addEventListener("click", () => {
+        state.turn = 5;
+        state.T = 20;
+        game5();
+      });
+      return;
+    }
+
+    const msg = newT === 30
+      ? "❌ ผิดทาง: เพิ่ม T ทำให้ f ลดลง"
+      : newT === 20
+        ? "ℹ ตรวจสอบแล้ว: ต้องลด T เพื่อเพิ่ม f"
+        : "⚠ ยังไม่ถึงเป้าหมาย: คำนวณ f = 1000/T แล้วปรับต่อ";
+
+    setFeedback("sfb", "bad", `${msg}<br><span class="score">Turn เหลือ ${state.turn}/5</span><br><br>
+      <button type="button" class="retro-btn blue" id="simContinue">CONTINUE</button>`);
+    $("simContinue").addEventListener("click", game5);
+  }
+
+  function showGameComplete(n, title, message) {
+    $("gameTitle").textContent = "✅ COMPLETE.EXE";
+    $("gameBody").innerHTML =
+      header(`GAME ${n} — ${title}`, "MISSION COMPLETE") +
+      `<div class="feedback good">
+        <h2 style="margin-top:0">🎉 ภารกิจสำเร็จ</h2>
+        <p>${message}</p>
+        <p><b>คะแนนสะสมทั้งหมด: ${state.score}</b></p>
+        <p>สถานะเกม: <b>${state.completed.size}/5 เกมสำเร็จ</b></p>
+      </div>
+      <div class="playrow">
+        <button type="button" class="retro-btn primary" id="nextMission">NEXT MISSION ▶</button>
+        <button type="button" class="retro-btn blue" id="desktopBtn">BACK TO DESKTOP</button>
+      </div>`;
+    bindClose();
+    $("desktopBtn").addEventListener("click", closeGame);
+    $("nextMission").addEventListener("click", () => {
+      const next = n < 5 ? n + 1 : 1;
+      openGame(next);
+    });
+  }
+
+  function renderGame() {
+    clearPending();
+    resetGameState(state.game);
+    if (state.game === 1) game1();
+    else if (state.game === 2) game2();
+    else if (state.game === 3) game3();
+    else if (state.game === 4) game4();
+    else if (state.game === 5) game5();
+  }
+
+  // Public functions retained for compatibility with the existing HTML buttons.
+  window.openGame = openGame;
+  window.closeGame = closeGame;
+
+  // Initialize once.
+  updateScore();
+  updateMissionStatus();
+
+  // Add a clear shared score/progress line to the home status without changing the original layout.
+  const statusBody = document.querySelector(".status .window-body");
+  if (statusBody && !document.getElementById("missionStatus")) {
+    statusBody.insertAdjacentHTML("beforeend",
+      `<div class="kpi" style="margin-top:10px">
+        <span>GLOBAL SCORE: <b id="globalScore">0</b></span>
+        <span id="missionStatus">0/5 GAMES COMPLETE</span>
+      </div>`);
+  }
+
+  const scoreMirror = new MutationObserver(() => {
+    const g = $("globalScore");
+    if (g) g.textContent = String(state.score);
+  });
+  const homeScore = $("homeScore");
+  if (homeScore) scoreMirror.observe(homeScore, {childList:true});
+
+})();
+</script>
+</body>
+</html>
